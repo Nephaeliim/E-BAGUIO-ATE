@@ -1,92 +1,58 @@
-import * as React from "react";
-import { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from "react-native";
-import { NavigationContainer } from "@react-navigation/native";
-import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import HomeScreen from "./screens/HomeScreen";
+import React from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { Ionicons } from '@expo/vector-icons';
+
+import AlertsScreen from './screens/AlertsScreen';
+import OutagesScreen from './screens/OutagesScreen';
+import HomeScreen from './screens/HomeScreen';
+import WelcomeScreen from './screens/WelcomeScreen';
+import LoginScreen from './screens/LoginScreen';
+import SignupScreen from './screens/SignupScreen';
 
 const Stack = createNativeStackNavigator();
+const Tab = createBottomTabNavigator();
 
-function LoginScreen({ navigation }) {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-
-  const handleLogin = () => {
-    if (username === "admin" && password === "1234") {
-      navigation.replace("Home"); // Go to Home screen
-    } else {
-      alert("Invalid credentials!");
-    }
-  };
-
+function MainTabs() {
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Welcome to E-BAGUIO-ATE</Text>
-
-      <TextInput
-        placeholder="Username"
-        value={username}
-        onChangeText={setUsername}
-        style={styles.input}
-      />
-
-      <TextInput
-        placeholder="Password"
-        secureTextEntry
-        value={password}
-        onChangeText={setPassword}
-        style={styles.input}
-      />
-
-      <TouchableOpacity onPress={handleLogin} style={styles.button}>
-        <Text style={styles.buttonText}>Login</Text>
-      </TouchableOpacity>
-    </View>
+    <Tab.Navigator
+      initialRouteName="Home"
+      screenOptions={({ route }) => ({
+        headerShown: false,
+        tabBarStyle: { backgroundColor: '#fff', height: 70, borderTopWidth: 0 },
+        tabBarLabelStyle: { fontSize: 12 },
+        tabBarActiveTintColor: '#007bff',
+        tabBarInactiveTintColor: '#333',
+        tabBarIcon: ({ color, size, focused }) => {
+          let iconName;
+          if (route.name === 'Outages') iconName = focused ? 'warning' : 'warning-outline';
+          else if (route.name === 'Alerts') iconName = focused ? 'flash' : 'flash-outline';
+          else if (route.name === 'Home') iconName = focused ? 'home' : 'home-outline';
+          else if (route.name === 'Evacuation') iconName = focused ? 'navigate' : 'navigate-outline';
+          else if (route.name === 'Help') iconName = focused ? 'help-circle' : 'help-circle-outline';
+          return <Ionicons name={iconName} size={24} color={color} />;
+        },
+      })}
+    >
+      <Tab.Screen name="Outages" component={OutagesScreen} />
+      <Tab.Screen name="Alerts" component={AlertsScreen} />
+      <Tab.Screen name="Home" component={HomeScreen} />
+      <Tab.Screen name="Evacuation" component={HomeScreen} />
+      <Tab.Screen name="Help" component={HomeScreen} />
+    </Tab.Navigator>
   );
 }
 
 export default function App() {
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName="Login">
-        <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
-        <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
+      <Stack.Navigator initialRouteName="Welcome" screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="Welcome" component={WelcomeScreen} />
+        <Stack.Screen name="Login" component={LoginScreen} />
+        <Stack.Screen name="Signup" component={SignupScreen} />
+        <Stack.Screen name="MainTabs" component={MainTabs} />
       </Stack.Navigator>
     </NavigationContainer>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#E6ECF3",
-    padding: 20,
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: "bold",
-    marginBottom: 20,
-  },
-  input: {
-    width: "80%",
-    padding: 12,
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 10,
-    marginBottom: 15,
-    backgroundColor: "#fff",
-  },
-  button: {
-    backgroundColor: "#4da6ff",
-    paddingVertical: 12,
-    paddingHorizontal: 40,
-    borderRadius: 10,
-  },
-  buttonText: {
-    color: "white",
-    fontWeight: "bold",
-    fontSize: 16,
-  },
-});
