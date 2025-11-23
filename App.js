@@ -7,6 +7,8 @@ import { Ionicons } from '@expo/vector-icons';
 import AlertsScreen from './screens/AlertsScreen';
 import OutagesScreen from './screens/OutagesScreen';
 import HomeScreen from './screens/HomeScreen';
+import EvacuationScreen from './screens/EvacuationScreen';
+import EvacuationDetailScreen from './screens/EvacuationDetailScreen';
 import WelcomeScreen from './screens/WelcomeScreen';
 import LoginScreen from './screens/LoginScreen';
 import SignupScreen from './screens/SignupScreen';
@@ -38,9 +40,19 @@ function MainTabs() {
       <Tab.Screen name="Outages" component={OutagesScreen} />
       <Tab.Screen name="Alerts" component={AlertsScreen} />
       <Tab.Screen name="Home" component={HomeScreen} />
-      <Tab.Screen name="Evacuation" component={HomeScreen} />
+      <Tab.Screen name="Evacuation" component={EvacuationStack} />
       <Tab.Screen name="Help" component={HomeScreen} />
     </Tab.Navigator>
+  );
+}
+
+// Create a Stack Navigator for the Evacuation flow
+function EvacuationStack() {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="EvacuationMain" component={EvacuationScreen} />
+      <Stack.Screen name="EvacuationDetail" component={EvacuationDetailScreen} />
+    </Stack.Navigator>
   );
 }
 
