@@ -11,29 +11,15 @@ import EvacuationScreen from './screens/EvacuationScreen';
 import HelpScreen from './screens/HelpScreen';
 import FirstAidScreen from './screens/FirstAidScreen';
 import CommunityHubScreen from './screens/CommunityHubScreen';
-import EvacuationDetailScreen from './screens/EvacuationDetailScreen';
+import EvacuationDetailScreen from './screens/EvacDetailScreen';
 import SubmitReportScreen from './screens/SubmitReportScreen';
 import InternetOutageReportsScreen from './screens/InternetOutageReportsScreen';
-
-
-import EvacDetailScreen from './screens/EvacDetailScreen';
-
 import WelcomeScreen from './screens/WelcomeScreen';
 import LoginScreen from './screens/LoginScreen';
 import SignupScreen from './screens/SignupScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
-
-// Create a Stack Navigator for the Evacuation flow
-function EvacuationStack() {
-  return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="EvacuationMain" component={EvacuationScreen} />
-      <Stack.Screen name="EvacuationDetail" component={EvacuationDetailScreen} />
-    </Stack.Navigator>
-  );
-}
 
 function MainTabs() {
   return (
@@ -67,7 +53,6 @@ function MainTabs() {
       <Tab.Screen name="Alerts" component={AlertsScreen} />
       <Tab.Screen name="Home" component={HomeScreen} />
 
-
       <Tab.Screen name="Evacuation" component={EvacuationStack} />
       <Tab.Screen name="Help" component={HelpScreen} />
     </Tab.Navigator>
@@ -79,7 +64,7 @@ function EvacuationStack() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="EvacuationMain" component={EvacuationScreen} />
-      <Stack.Screen name="EvacuationDetail" component={EvacDetailScreen} />
+      <Stack.Screen name="EvacuationDetail" component={EvacuationDetailScreen} />
     </Stack.Navigator>
   );
 }
