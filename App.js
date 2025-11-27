@@ -14,6 +14,10 @@ import CommunityHubScreen from './screens/CommunityHubScreen';
 import EvacuationDetailScreen from './screens/EvacuationDetailScreen';
 import SubmitReportScreen from './screens/SubmitReportScreen';
 import InternetOutageReportsScreen from './screens/InternetOutageReportsScreen';
+
+
+import EvacDetailScreen from './screens/EvacDetailScreen';
+
 import WelcomeScreen from './screens/WelcomeScreen';
 import LoginScreen from './screens/LoginScreen';
 import SignupScreen from './screens/SignupScreen';
@@ -62,9 +66,21 @@ function MainTabs() {
       <Tab.Screen name="Outages" component={OutagesScreen} />
       <Tab.Screen name="Alerts" component={AlertsScreen} />
       <Tab.Screen name="Home" component={HomeScreen} />
+
+
       <Tab.Screen name="Evacuation" component={EvacuationStack} />
       <Tab.Screen name="Help" component={HelpScreen} />
     </Tab.Navigator>
+  );
+}
+
+// Create a Stack Navigator for the Evacuation flow
+function EvacuationStack() {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="EvacuationMain" component={EvacuationScreen} />
+      <Stack.Screen name="EvacuationDetail" component={EvacDetailScreen} />
+    </Stack.Navigator>
   );
 }
 

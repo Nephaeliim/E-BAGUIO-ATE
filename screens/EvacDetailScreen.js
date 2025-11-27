@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
-export default function EvacuationDetailScreen({ route, navigation }) {
+export default function EvacDetailScreen({ route, navigation }) {
   const { center } = route.params;
   
   const capacityPercentage = Math.min(100, Math.max(0, (center.currentCapacity / center.capacity) * 100));
