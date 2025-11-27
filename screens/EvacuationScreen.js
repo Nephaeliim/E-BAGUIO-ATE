@@ -92,6 +92,8 @@ export default function EvacuationScreen({ navigation }) {
     {
       name: 'Baguio Convention Center',
       address: 'Gov. Pack Road, Baguio City',
+      latitude: 16.4119,
+      longitude: 120.5960,
       distance: '1.1 km away',
       capacity: 450,
       currentCapacity: 100,
