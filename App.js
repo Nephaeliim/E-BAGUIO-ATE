@@ -12,6 +12,8 @@ import HelpScreen from './screens/HelpScreen';
 import FirstAidScreen from './screens/FirstAidScreen';
 import CommunityHubScreen from './screens/CommunityHubScreen';
 import EvacuationDetailScreen from './screens/EvacuationDetailScreen';
+import SubmitReportScreen from './screens/SubmitReportScreen';
+import InternetOutageReportsScreen from './screens/InternetOutageReportsScreen';
 import WelcomeScreen from './screens/WelcomeScreen';
 import LoginScreen from './screens/LoginScreen';
 import SignupScreen from './screens/SignupScreen';
@@ -76,6 +78,8 @@ export default function App() {
         <Stack.Screen name="MainTabs" component={MainTabs} />
         <Stack.Screen name="FirstAid" component={FirstAidScreen} />
         <Stack.Screen name="CommunityHub" component={CommunityHubScreen} />
+        <Stack.Screen name="SubmitReport" component={SubmitReportScreen} />
+        <Stack.Screen name="InternetOutageReports" component={InternetOutageReportsScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import CustomHeader from './CustomHeader';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Linking } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 

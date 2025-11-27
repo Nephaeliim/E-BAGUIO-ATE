@@ -1,4 +1,5 @@
 import React from 'react';
+import CustomHeader from './CustomHeader';  
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 

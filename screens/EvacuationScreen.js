@@ -1,4 +1,5 @@
 import React from 'react';
+import CustomHeader from './CustomHeader';
 
 import {
   View,

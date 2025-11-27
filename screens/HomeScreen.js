@@ -1,22 +1,12 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import CustomHeader from './CustomHeader';
 
 export default function HomeScreen({ navigation }) {
   return (
     <ScrollView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>E-BAGUIO-ATE</Text>
-        <View style={styles.headerIcons}>
-          <TouchableOpacity onPress={() => navigation.navigate('Alerts')}>
-            <Ionicons name="warning-outline" size={24} color="#333" style={styles.headerIcon} />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => alert('Settings')}>
-            <Ionicons name="globe-outline" size={24} color="#333" />
-          </TouchableOpacity>
-        </View>
-      </View>
+      <CustomHeader navigation={navigation} backgroundColor="#B3D9FF" />
 
       {/* Welcome Card */}
       <View style={styles.welcomeCard}>
@@ -42,7 +32,7 @@ export default function HomeScreen({ navigation }) {
         <View style={styles.quickActionsGrid}>
           <TouchableOpacity 
             style={[styles.actionCard, styles.actionCardRed]}
-            onPress={() => navigation.navigate('Help', { screen: 'FirstAid' })}
+            onPress={() => navigation.navigate('FirstAid')}
           >
             <View style={[styles.actionIconContainer, { backgroundColor: '#E74C3C' }]}>
               <Ionicons name="medical-outline" size={24} color="#fff" />
@@ -124,25 +114,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F5F5F5',
-  },
-  header: {
-    backgroundColor: '#B3D9FF',
-    padding: 16,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  headerIcons: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  headerIcon: {
-    marginRight: 12,
   },
   welcomeCard: {
     backgroundColor: '#1E90FF',
