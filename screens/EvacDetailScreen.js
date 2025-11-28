@@ -6,7 +6,6 @@ import {
   ScrollView,
   TouchableOpacity,
   StyleSheet,
-  Image,
   SafeAreaView,
   Alert,
   ActivityIndicator,
@@ -17,12 +16,23 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import Geolocation from 'react-native-geolocation-service';
 
+// Conditional import for WebView
+let WebView;
+try {
+  WebView = require('react-native-webview').WebView;
+} catch (e) {
+  WebView = null;
+}
+
 export default function EvacDetailScreen({ route, navigation }) {
   const { center } = route.params;
   
   const [userLocation, setUserLocation] = useState(null);
   const [distance, setDistance] = useState(null);
   const [loading, setLoading] = useState(false);
+  
+  // Check if WebView is available (not on web)
+  const isWebViewAvailable = WebView !== null && Platform.OS !== 'web';
   
   const capacityPercentage = Math.min(100, Math.max(0, (center.currentCapacity / center.capacity) * 100));
   
@@ -144,9 +154,116 @@ export default function EvacDetailScreen({ route, navigation }) {
     });
   };
 
-  // Generate OpenStreetMap static image URL
-  const getStaticMapUrl = (lat, lon, zoom = 15) => {
-    return `https://www.openstreetmap.org/export/embed.html?bbox=${lon-0.01},${lat-0.01},${lon+0.01},${lat+0.01}&layer=mapnik&marker=${lat},${lon}`;
+  // Generate OpenStreetMap embed HTML
+  const generateMapHTML = (lat, lon, markerLabel) => {
+    return `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+          <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+          <style>
+            body { margin: 0; padding: 0; }
+            #map { height: 100vh; width: 100%; }
+          </style>
+        </head>
+        <body>
+          <div id="map"></div>
+          <script>
+            var map = L.map('map').setView([${lat}, ${lon}], 15);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+              attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+            
+            var marker = L.marker([${lat}, ${lon}]).addTo(map);
+            marker.bindPopup("<b>${markerLabel}</b>").openPopup();
+          </script>
+        </body>
+      </html>
+    `;
+  };
+
+  // Generate route map HTML with both locations and path
+  const generateRouteMapHTML = (userLat, userLon, centerLat, centerLon, distanceKm) => {
+    return `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+          <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+          <style>
+            body { margin: 0; padding: 0; }
+            #map { height: 100vh; width: 100%; }
+            .distance-badge {
+              position: absolute;
+              top: 10px;
+              right: 10px;
+              background: rgba(2, 132, 199, 0.9);
+              color: white;
+              padding: 8px 12px;
+              border-radius: 20px;
+              font-weight: bold;
+              font-size: 12px;
+              z-index: 1000;
+              box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            }
+          </style>
+        </head>
+        <body>
+          <div class="distance-badge">📍 ${distanceKm < 1 ? (distanceKm * 1000).toFixed(0) + 'm' : distanceKm.toFixed(2) + ' km'} away</div>
+          <div id="map"></div>
+          <script>
+            // Calculate center point between two locations
+            var centerLat = (${userLat} + ${centerLat}) / 2;
+            var centerLon = (${userLon} + ${centerLon}) / 2;
+            
+            // Create map
+            var map = L.map('map').setView([centerLat, centerLon], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+              attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+            
+            // User location marker (blue)
+            var userIcon = L.divIcon({
+              className: 'custom-icon',
+              html: '<div style="background: #0284c7; width: 30px; height: 30px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center;"><span style="color: white; font-size: 16px;">👤</span></div>',
+              iconSize: [30, 30]
+            });
+            var userMarker = L.marker([${userLat}, ${userLon}], {icon: userIcon}).addTo(map);
+            userMarker.bindPopup("<b>Your Location</b>");
+            
+            // Evacuation center marker (red)
+            var centerIcon = L.divIcon({
+              className: 'custom-icon',
+              html: '<div style="background: #E74C3C; width: 30px; height: 30px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center;"><span style="color: white; font-size: 16px;">🏢</span></div>',
+              iconSize: [30, 30]
+            });
+            var centerMarker = L.marker([${centerLat}, ${centerLon}], {icon: centerIcon}).addTo(map);
+            centerMarker.bindPopup("<b>Evacuation Center</b>");
+            
+            // Draw route line
+            var routeLine = L.polyline([
+              [${userLat}, ${userLon}],
+              [${centerLat}, ${centerLon}]
+            ], {
+              color: '#0284c7',
+              weight: 4,
+              opacity: 0.7,
+              dashArray: '10, 10'
+            }).addTo(map);
+            
+            // Fit map to show both markers
+            var bounds = L.latLngBounds([
+              [${userLat}, ${userLon}],
+              [${centerLat}, ${centerLon}]
+            ]);
+            map.fitBounds(bounds, {padding: [50, 50]});
+          </script>
+        </body>
+      </html>
+    `;
   };
 
   useEffect(() => {
@@ -177,19 +294,34 @@ export default function EvacDetailScreen({ route, navigation }) {
           {/* Map Views */}
           <View style={styles.mapContainer}>
             {/* Top Map - Evacuation Center Location */}
-            <TouchableOpacity 
-              style={styles.mapBox}
-              onPress={() => center.latitude && center.longitude && Linking.openURL(`https://www.openstreetmap.org/?mlat=${center.latitude}&mlon=${center.longitude}#map=15/${center.latitude}/${center.longitude}`)}
-              activeOpacity={0.8}
-            >
+            <View style={styles.mapBox}>
               {center.latitude && center.longitude ? (
-                <View style={styles.mapContent}>
-                  <View style={styles.mapIconOverlay}>
-                    <Ionicons name="location" size={40} color="#E74C3C" />
-                    <Text style={styles.mapLabel}>{center.name}</Text>
-                    <Text style={styles.mapSubLabel}>Tap to open in maps</Text>
-                  </View>
-                </View>
+                isWebViewAvailable ? (
+                  <WebView
+                    originWhitelist={['*']}
+                    source={{ html: generateMapHTML(center.latitude, center.longitude, center.name) }}
+                    style={styles.webview}
+                    scrollEnabled={false}
+                    javaScriptEnabled={true}
+                  />
+                ) : (
+                  <TouchableOpacity 
+                    style={styles.mapFallback}
+                    onPress={() => Linking.openURL(`https://www.openstreetmap.org/?mlat=${center.latitude}&mlon=${center.longitude}#map=15/${center.latitude}/${center.longitude}`)}
+                    activeOpacity={0.8}
+                  >
+                    <View style={styles.mapFallbackContent}>
+                      <Ionicons name="map" size={50} color="#0284c7" />
+                      <Text style={styles.mapFallbackTitle}>{center.name}</Text>
+                      <Text style={styles.mapFallbackSubtitle}>Tap to view on map</Text>
+                      <View style={styles.coordinatesBox}>
+                        <Text style={styles.coordinatesText}>
+                          📍 {center.latitude.toFixed(4)}, {center.longitude.toFixed(4)}
+                        </Text>
+                      </View>
+                    </View>
+                  </TouchableOpacity>
+                )
               ) : (
                 <View style={styles.placeholderMap}>
                   <Ionicons name="location" size={40} color="#999" />
@@ -197,7 +329,7 @@ export default function EvacDetailScreen({ route, navigation }) {
                   <Text style={styles.placeholderSubtext}>{center.name}</Text>
                 </View>
               )}
-            </TouchableOpacity>
+            </View>
 
             {/* Bottom Map - Route from User to Center */}
             <View style={styles.mapBox}>
@@ -207,46 +339,64 @@ export default function EvacDetailScreen({ route, navigation }) {
                   <Text style={styles.placeholderText}>Getting your location...</Text>
                 </View>
               ) : userLocation && center.latitude && center.longitude ? (
-                <TouchableOpacity 
-                  style={styles.mapContent}
-                  onPress={openInMaps}
-                  activeOpacity={0.8}
-                >
-                  <View style={styles.routeVisualization}>
-                    {/* User Location */}
-                    <View style={styles.locationPoint}>
-                      <View style={styles.userLocationDot}>
-                        <Ionicons name="person" size={16} color="#fff" />
-                      </View>
-                      <Text style={styles.locationLabel}>You</Text>
-                    </View>
-
-                    {/* Route Line */}
-                    <View style={styles.routeLine}>
-                      <View style={styles.dottedLine} />
-                      {distance !== null && (
-                        <View style={styles.distanceBadge}>
-                          <Ionicons name="navigate" size={12} color="#0284c7" />
-                          <Text style={styles.distanceBadgeText}>
-                            {distance < 1 
-                              ? `${(distance * 1000).toFixed(0)}m`
-                              : `${distance.toFixed(2)} km`
-                            }
-                          </Text>
+                isWebViewAvailable ? (
+                  <WebView
+                    originWhitelist={['*']}
+                    source={{ 
+                      html: generateRouteMapHTML(
+                        userLocation.latitude, 
+                        userLocation.longitude, 
+                        center.latitude, 
+                        center.longitude,
+                        distance
+                      ) 
+                    }}
+                    style={styles.webview}
+                    scrollEnabled={false}
+                    javaScriptEnabled={true}
+                  />
+                ) : (
+                  <TouchableOpacity 
+                    style={styles.mapFallback}
+                    onPress={openInMaps}
+                    activeOpacity={0.8}
+                  >
+                    <View style={styles.routeVisualization}>
+                      {/* User Location */}
+                      <View style={styles.locationPoint}>
+                        <View style={styles.userLocationDot}>
+                          <Ionicons name="person" size={16} color="#fff" />
                         </View>
-                      )}
-                    </View>
-
-                    {/* Evacuation Center */}
-                    <View style={styles.locationPoint}>
-                      <View style={styles.centerLocationDot}>
-                        <Ionicons name="business" size={16} color="#fff" />
+                        <Text style={styles.locationLabel}>You</Text>
                       </View>
-                      <Text style={styles.locationLabel}>Center</Text>
+
+                      {/* Route Line */}
+                      <View style={styles.routeLine}>
+                        <View style={styles.dottedLine} />
+                        {distance !== null && (
+                          <View style={styles.distanceBadge}>
+                            <Ionicons name="navigate" size={12} color="#0284c7" />
+                            <Text style={styles.distanceBadgeText}>
+                              {distance < 1 
+                                ? `${(distance * 1000).toFixed(0)}m`
+                                : `${distance.toFixed(2)} km`
+                              }
+                            </Text>
+                          </View>
+                        )}
+                      </View>
+
+                      {/* Evacuation Center */}
+                      <View style={styles.locationPoint}>
+                        <View style={styles.centerLocationDot}>
+                          <Ionicons name="business" size={16} color="#fff" />
+                        </View>
+                        <Text style={styles.locationLabel}>Center</Text>
+                      </View>
                     </View>
-                  </View>
-                  <Text style={styles.tapToNavigate}>Tap to navigate</Text>
-                </TouchableOpacity>
+                    <Text style={styles.tapToNavigate}>Tap to open in maps</Text>
+                  </TouchableOpacity>
+                )
               ) : (
                 <View style={styles.placeholderMap}>
                   <Ionicons name="navigate-circle-outline" size={40} color="#999" />
@@ -368,14 +518,19 @@ const styles = StyleSheet.create({
 
   mapBox: {
     width: '100%',
-    height: 200,
+    height: 250,
     borderRadius: 8,
     marginBottom: 12,
     overflow: 'hidden',
     backgroundColor: '#e5e5e5',
   },
 
-  mapContent: {
+  webview: {
+    flex: 1,
+    backgroundColor: 'transparent',
+  },
+
+  mapFallback: {
     width: '100%',
     height: '100%',
     backgroundColor: '#f0f9ff',
@@ -383,21 +538,40 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
 
-  mapIconOverlay: {
+  mapFallbackContent: {
     alignItems: 'center',
+    padding: 20,
   },
 
-  mapLabel: {
-    fontSize: 14,
+  mapFallbackTitle: {
+    fontSize: 16,
     fontWeight: '600',
     color: '#000',
-    marginTop: 8,
+    marginTop: 12,
+    textAlign: 'center',
   },
 
-  mapSubLabel: {
-    fontSize: 12,
+  mapFallbackSubtitle: {
+    fontSize: 13,
     color: '#666',
-    marginTop: 4,
+    marginTop: 6,
+    textAlign: 'center',
+  },
+
+  coordinatesBox: {
+    backgroundColor: '#fff',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    marginTop: 12,
+    borderWidth: 1,
+    borderColor: '#0284c7',
+  },
+
+  coordinatesText: {
+    fontSize: 12,
+    color: '#0284c7',
+    fontWeight: '500',
   },
 
   routeVisualization: {
