@@ -66,8 +66,12 @@ export default function SubmitReportScreen({ navigation }) {
         </TouchableOpacity>
         <Text style={styles.headerTitle}>E-BAGUIO-ATE</Text>
         <View style={styles.headerIcons}>
-          <Ionicons name="warning-outline" size={24} color="#333" style={{ marginRight: 10 }} />
-          <Ionicons name="globe-outline" size={24} color="#333" />
+          <TouchableOpacity onPress={() => navigation.navigate('SubmitReport')}>
+            <Ionicons name="warning-outline" size={24} color="#333" style={{ marginRight: 10 }} />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => navigation.navigate('InternetOutageReports', { provider: null })}>
+            <Ionicons name="globe-outline" size={24} color="#333" />
+          </TouchableOpacity>
         </View>
       </View>
 
@@ -223,6 +227,8 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     color: '#333',
+    flex: 1,
+    textAlign: 'center',
   },
   headerIcons: {
     flexDirection: 'row',

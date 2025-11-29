@@ -93,8 +93,7 @@ export default function EvacuationScreen({ navigation }) {
     {
       name: 'Baguio Convention Center',
       address: 'Gov. Pack Road, Baguio City',
-      latitude: 16.4119,
-      longitude: 120.5960,
+      distance: '1.1 km away',
       capacity: 450,
       currentCapacity: 100,
       facilities: [
@@ -107,8 +106,7 @@ export default function EvacuationScreen({ navigation }) {
     {
       name: 'UP Baguio Gym',
       address: 'Harrison Rd, Baguio City, Benguet',
-      latitude: 16.4052,
-      longitude: 120.5925,
+      distance: '1.5 km away',
       capacity: 1000,
       currentCapacity: 423,
       facilities: [
@@ -120,9 +118,8 @@ export default function EvacuationScreen({ navigation }) {
     {
       name: 'Burnham Park Pavilion',
       address: 'Burnham Park, Baguio City',
-      latitude: 16.411931903412487,
-      longitude: 120.59351979020661,
-      capacity: 500,
+      distance: '1.7 km away',
+      capacity: 300,
       currentCapacity: 273,
       facilities: [
         { icon: 'medical-outline', name: 'Medical Station' },
@@ -142,14 +139,7 @@ export default function EvacuationScreen({ navigation }) {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>E-BAGUIO-ATE</Text>
-
-        <View style={styles.headerIcons}>
-          <Ionicons name="warning-outline" size={24} color="#000" style={{ marginRight: 10 }} />
-          <Ionicons name="globe-outline" size={24} color="#000" />
-        </View>
-      </View>
+      <CustomHeader navigation={navigation} backgroundColor="#B3D9FF" />
 
       <ScrollView style={styles.scrollView} contentContainerStyle={{ paddingBottom: 100 }}>
         {centers.map((center, index) => (
@@ -167,21 +157,6 @@ export default function EvacuationScreen({ navigation }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f5f5f5' },
-
-  header: {
-    backgroundColor: '#fff',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    paddingTop: 50,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e5e5e5',
-  },
-
-  headerTitle: { fontSize: 18, fontWeight: 'bold', color: '#000' },
-  headerIcons: { flexDirection: 'row', alignItems: 'center' },
 
   scrollView: { flex: 1 },
 

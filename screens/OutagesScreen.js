@@ -3,30 +3,19 @@ import CustomHeader from './CustomHeader';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
-export default function OutagesScreen() {
+export default function OutagesScreen({ navigation }) {
   const [showInternetReports, setShowInternetReports] = useState(false);
   const [selectedProvider, setSelectedProvider] = useState(null);
 
   const providers = [
     { id: 'pldt', name: 'PLDT', logo: '📡', color: '#C41E3A' },
-    { id: 'globe', name: 'Globe', logo: '🌐', color: '#0033A0' },
+    { id: 'globe', name: 'Globe', logo: '🌍', color: '#0033A0' },
     { id: 'converge', name: 'Converge', logo: '📶', color: '#00A651' },
   ];
 
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>E-BAGUIO-ATE</Text>
-        <View style={styles.headerIcons}>
-          <TouchableOpacity>
-            <Ionicons name="warning-outline" size={24} color="#333" style={styles.headerIcon} />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => alert('Settings')}>
-            <Ionicons name="globe-outline" size={24} color="#333" />
-          </TouchableOpacity>
-        </View>
-      </View>
+      <CustomHeader navigation={navigation} backgroundColor="#E8FDE8" />
 
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
         {/* Power Outages */}
@@ -225,25 +214,6 @@ const styles = StyleSheet.create({
     flex: 1, 
     backgroundColor: '#E8FDE8',
   },
-  header: {
-    backgroundColor: '#E8FDE8',
-    padding: 16,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  headerIcons: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  headerIcon: {
-    marginRight: 12,
-  },
   scrollView: {
     flex: 1,
   },
@@ -343,7 +313,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
   },
-  // Modal Styles
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',

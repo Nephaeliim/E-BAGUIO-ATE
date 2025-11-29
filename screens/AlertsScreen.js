@@ -3,21 +3,10 @@ import CustomHeader from './CustomHeader';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
-export default function AlertsScreen() {
+export default function AlertsScreen({ navigation }) {
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>E-BAGUIO-ATE</Text>
-        <View style={styles.headerIcons}>
-          <TouchableOpacity>
-            <Ionicons name="warning-outline" size={24} color="#333" style={styles.headerIcon} />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => alert('Settings')}>
-            <Ionicons name="globe-outline" size={24} color="#333" />
-          </TouchableOpacity>
-        </View>
-      </View>
+      <CustomHeader navigation={navigation} backgroundColor="#FFF7E0" />
 
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
         <View style={[styles.card, styles.red]}>
@@ -90,25 +79,6 @@ const styles = StyleSheet.create({
   container: { 
     flex: 1, 
     backgroundColor: '#FFF7E0',
-  },
-  header: {
-    backgroundColor: '#FFF7E0',
-    padding: 16,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  headerIcons: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  headerIcon: {
-    marginRight: 12,
   },
   scrollView: {
     flex: 1,

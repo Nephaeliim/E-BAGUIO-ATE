@@ -19,18 +19,7 @@ export default function HelpScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>E-BAGUIO-ATE</Text>
-        <View style={styles.headerIcons}>
-          <TouchableOpacity onPress={() => navigation.navigate('Alerts')}>
-            <Ionicons name="warning-outline" size={24} color="#333" style={styles.headerIcon} />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => alert('Settings')}>
-            <Ionicons name="globe-outline" size={24} color="#333" />
-          </TouchableOpacity>
-        </View>
-      </View>
+      <CustomHeader navigation={navigation} backgroundColor="#B3D9FF" />
 
       <ScrollView style={styles.scrollView}>
         {/* Emergency SOS */}
@@ -151,25 +140,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F5F5F5',
-  },
-  header: {
-    backgroundColor: '#B3D9FF',
-    padding: 16,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  headerIcons: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  headerIcon: {
-    marginRight: 12,
   },
   scrollView: {
     flex: 1,
