@@ -11,10 +11,9 @@ import {
   ActivityIndicator,
   Linking,
   Platform,
-  PermissionsAndroid,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import Geolocation from 'react-native-geolocation-service';
+import * as Location from 'expo-location';
 
 // Conditional import for WebView
 let WebView;
@@ -55,78 +54,87 @@ export default function EvacDetailScreen({ route, navigation }) {
     return R * c;
   };
 
-  // Request location permission (Android)
+  // Request location permission
   const requestLocationPermission = async () => {
-    if (Platform.OS === 'android') {
-      try {
-        const granted = await PermissionsAndroid.request(
-          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-          {
-            title: 'Location Permission',
-            message: 'This app needs access to your location to calculate distance.',
-            buttonNeutral: 'Ask Me Later',
-            buttonNegative: 'Cancel',
-            buttonPositive: 'OK',
-          }
-        );
-        return granted === PermissionsAndroid.RESULTS.GRANTED;
-      } catch (err) {
-        console.warn(err);
-        return false;
-      }
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      return status === 'granted';
+    } catch (error) {
+      console.error('Permission error:', error);
+      return false;
     }
-    return true; // iOS handles permissions automatically
   };
 
   // Get user's current location
   const getUserLocation = async () => {
     setLoading(true);
+    console.log('Starting location request...');
+    
     try {
-      const hasPermission = await requestLocationPermission();
+      // Check if location services are enabled
+      const servicesEnabled = await Location.hasServicesEnabledAsync();
+      console.log('Location services enabled:', servicesEnabled);
       
-      if (!hasPermission) {
+      if (!servicesEnabled) {
         Alert.alert(
-          'Permission Denied',
-          'Location permission is required to calculate distance to evacuation center.',
+          'Location Services Disabled',
+          'Please enable location services in your device settings.',
           [{ text: 'OK' }]
         );
         setLoading(false);
         return;
       }
 
-      Geolocation.getCurrentPosition(
-        (position) => {
-          const newLocation = {
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
-          };
-          setUserLocation(newLocation);
+      // Request permission
+      console.log('Requesting location permission...');
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      console.log('Permission status:', status);
+      
+      if (status !== 'granted') {
+        Alert.alert(
+          'Permission Denied',
+          'Location permission is required to calculate distance to evacuation center. Please grant permission in your device settings.',
+          [{ text: 'OK' }]
+        );
+        setLoading(false);
+        return;
+      }
 
-          if (center.latitude && center.longitude) {
-            const dist = calculateDistance(
-              position.coords.latitude,
-              position.coords.longitude,
-              center.latitude,
-              center.longitude
-            );
-            setDistance(dist);
-          }
-          setLoading(false);
-        },
-        (error) => {
-          console.error('Error getting location:', error);
-          Alert.alert('Error', 'Failed to get your location. Please try again.');
-          setLoading(false);
-        },
-        {
-          enableHighAccuracy: true,
-          timeout: 15000,
-          maximumAge: 10000,
-        }
-      );
+      // Get location
+      console.log('Getting current position...');
+      const location = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.High,
+        maximumAge: 10000,
+        timeout: 15000,
+      });
+      
+      console.log('Location received:', location.coords);
+
+      const newLocation = {
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+      };
+      setUserLocation(newLocation);
+
+      if (center.latitude && center.longitude) {
+        const dist = calculateDistance(
+          location.coords.latitude,
+          location.coords.longitude,
+          center.latitude,
+          center.longitude
+        );
+        setDistance(dist);
+        console.log('Distance calculated:', dist);
+      }
+      
+      Alert.alert('Success', 'Location updated successfully!');
+      setLoading(false);
     } catch (error) {
-      console.error('Error getting location:', error);
-      Alert.alert('Error', 'Failed to get your location. Please try again.');
+      console.error('Location error details:', error);
+      Alert.alert(
+        'Location Error', 
+        `Failed to get location: ${error.message}\n\nPlease make sure:\n1. Location is enabled\n2. App has location permission\n3. You have GPS signal`
+      );
       setLoading(false);
     }
   };
@@ -294,34 +302,31 @@ export default function EvacDetailScreen({ route, navigation }) {
           {/* Map Views */}
           <View style={styles.mapContainer}>
             {/* Top Map - Evacuation Center Location */}
-            <View style={styles.mapBox}>
+            <TouchableOpacity 
+              style={styles.mapBox}
+              onPress={() => center.latitude && center.longitude && Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${center.latitude},${center.longitude}`)}
+              activeOpacity={0.8}
+            >
               {center.latitude && center.longitude ? (
-                isWebViewAvailable ? (
-                  <WebView
-                    originWhitelist={['*']}
-                    source={{ html: generateMapHTML(center.latitude, center.longitude, center.name) }}
-                    style={styles.webview}
-                    scrollEnabled={false}
-                    javaScriptEnabled={true}
-                  />
-                ) : (
-                  <TouchableOpacity 
-                    style={styles.mapFallback}
-                    onPress={() => Linking.openURL(`https://www.openstreetmap.org/?mlat=${center.latitude}&mlon=${center.longitude}#map=15/${center.latitude}/${center.longitude}`)}
-                    activeOpacity={0.8}
-                  >
-                    <View style={styles.mapFallbackContent}>
-                      <Ionicons name="map" size={50} color="#0284c7" />
-                      <Text style={styles.mapFallbackTitle}>{center.name}</Text>
-                      <Text style={styles.mapFallbackSubtitle}>Tap to view on map</Text>
-                      <View style={styles.coordinatesBox}>
-                        <Text style={styles.coordinatesText}>
-                          📍 {center.latitude.toFixed(4)}, {center.longitude.toFixed(4)}
-                        </Text>
-                      </View>
+                <View style={styles.mapFallback}>
+                  <View style={styles.mapFallbackContent}>
+                    <View style={styles.mapIconContainer}>
+                      <Ionicons name="business" size={50} color="#E74C3C" />
                     </View>
-                  </TouchableOpacity>
-                )
+                    <Text style={styles.mapFallbackTitle}>{center.name}</Text>
+                    <Text style={styles.mapFallbackSubtitle}>{center.address}</Text>
+                    <View style={styles.coordinatesBox}>
+                      <Ionicons name="location" size={16} color="#0284c7" />
+                      <Text style={styles.coordinatesText}>
+                        {center.latitude.toFixed(4)}, {center.longitude.toFixed(4)}
+                      </Text>
+                    </View>
+                    <View style={styles.tapHintBox}>
+                      <Ionicons name="map-outline" size={16} color="#666" />
+                      <Text style={styles.tapHint}>Tap to open in Google Maps</Text>
+                    </View>
+                  </View>
+                </View>
               ) : (
                 <View style={styles.placeholderMap}>
                   <Ionicons name="location" size={40} color="#999" />
@@ -329,90 +334,100 @@ export default function EvacDetailScreen({ route, navigation }) {
                   <Text style={styles.placeholderSubtext}>{center.name}</Text>
                 </View>
               )}
-            </View>
+            </TouchableOpacity>
 
             {/* Bottom Map - Route from User to Center */}
-            <View style={styles.mapBox}>
+            <TouchableOpacity 
+              style={styles.mapBox}
+              onPress={() => {
+                if (userLocation && center.latitude && center.longitude) {
+                  // Open Google Maps with directions
+                  const url = `https://www.google.com/maps/dir/?api=1&origin=${userLocation.latitude},${userLocation.longitude}&destination=${center.latitude},${center.longitude}&travelmode=driving`;
+                  Linking.openURL(url);
+                }
+              }}
+              activeOpacity={0.8}
+              disabled={!userLocation}
+            >
               {loading ? (
                 <View style={styles.placeholderMap}>
                   <ActivityIndicator size="large" color="#0284c7" />
                   <Text style={styles.placeholderText}>Getting your location...</Text>
                 </View>
               ) : userLocation && center.latitude && center.longitude ? (
-                isWebViewAvailable ? (
-                  <WebView
-                    originWhitelist={['*']}
-                    source={{ 
-                      html: generateRouteMapHTML(
-                        userLocation.latitude, 
-                        userLocation.longitude, 
-                        center.latitude, 
-                        center.longitude,
-                        distance
-                      ) 
-                    }}
-                    style={styles.webview}
-                    scrollEnabled={false}
-                    javaScriptEnabled={true}
-                  />
-                ) : (
-                  <TouchableOpacity 
-                    style={styles.mapFallback}
-                    onPress={openInMaps}
-                    activeOpacity={0.8}
-                  >
-                    <View style={styles.routeVisualization}>
-                      {/* User Location */}
-                      <View style={styles.locationPoint}>
-                        <View style={styles.userLocationDot}>
-                          <Ionicons name="person" size={16} color="#fff" />
-                        </View>
-                        <Text style={styles.locationLabel}>You</Text>
+                <View style={styles.mapFallback}>
+                  <View style={styles.routeVisualization}>
+                    {/* User Location */}
+                    <View style={styles.locationPoint}>
+                      <View style={styles.userLocationDot}>
+                        <Ionicons name="person" size={20} color="#fff" />
                       </View>
+                      <Text style={styles.locationLabel}>Your Location</Text>
+                      <Text style={styles.coordsSmall}>
+                        {userLocation.latitude.toFixed(3)}, {userLocation.longitude.toFixed(3)}
+                      </Text>
+                    </View>
 
-                      {/* Route Line */}
-                      <View style={styles.routeLine}>
-                        <View style={styles.dottedLine} />
-                        {distance !== null && (
-                          <View style={styles.distanceBadge}>
-                            <Ionicons name="navigate" size={12} color="#0284c7" />
-                            <Text style={styles.distanceBadgeText}>
-                              {distance < 1 
-                                ? `${(distance * 1000).toFixed(0)}m`
-                                : `${distance.toFixed(2)} km`
-                              }
-                            </Text>
-                          </View>
-                        )}
-                      </View>
-
-                      {/* Evacuation Center */}
-                      <View style={styles.locationPoint}>
-                        <View style={styles.centerLocationDot}>
-                          <Ionicons name="business" size={16} color="#fff" />
+                    {/* Route Line with Distance */}
+                    <View style={styles.routeLineContainer}>
+                      <View style={styles.routeLineVertical} />
+                      {distance !== null && (
+                        <View style={styles.distanceBadgeLarge}>
+                          <Ionicons name="navigate" size={20} color="#0284c7" />
+                          <Text style={styles.distanceBadgeTextLarge}>
+                            {distance < 1 
+                              ? `${(distance * 1000).toFixed(0)}m`
+                              : `${distance.toFixed(2)} km`
+                            }
+                          </Text>
+                          <Text style={styles.distanceSubtext}>away</Text>
                         </View>
-                        <Text style={styles.locationLabel}>Center</Text>
+                      )}
+                      <View style={styles.routeArrow}>
+                        <Ionicons name="arrow-down" size={24} color="#0284c7" />
                       </View>
                     </View>
-                    <Text style={styles.tapToNavigate}>Tap to open in maps</Text>
-                  </TouchableOpacity>
-                )
+
+                    {/* Evacuation Center */}
+                    <View style={styles.locationPoint}>
+                      <View style={styles.centerLocationDot}>
+                        <Ionicons name="business" size={20} color="#fff" />
+                      </View>
+                      <Text style={styles.locationLabel}>Evacuation Center</Text>
+                      <Text style={styles.coordsSmall}>
+                        {center.latitude.toFixed(3)}, {center.longitude.toFixed(3)}
+                      </Text>
+                    </View>
+                  </View>
+                  
+                  <View style={styles.tapHintBox}>
+                    <Ionicons name="navigate-circle-outline" size={16} color="#666" />
+                    <Text style={styles.tapHint}>Tap to get turn-by-turn directions</Text>
+                  </View>
+                </View>
               ) : (
                 <View style={styles.placeholderMap}>
                   <Ionicons name="navigate-circle-outline" size={40} color="#999" />
                   <Text style={styles.placeholderText}>Your Route</Text>
                   <Text style={styles.placeholderSubtext}>
-                    {!userLocation ? 'Enable location to see route' : 'Route will be displayed here'}
+                    {!userLocation ? 'Tap "Update Location" to see route' : 'Route will be displayed here'}
                   </Text>
                 </View>
               )}
-            </View>
+            </TouchableOpacity>
 
             {/* Action Buttons Below Maps */}
             <View style={styles.actionButtons}>
               <TouchableOpacity 
                 style={styles.primaryButton}
-                onPress={openInMaps}
+                onPress={() => {
+                  if (userLocation && center.latitude && center.longitude) {
+                    const url = `https://www.google.com/maps/dir/?api=1&origin=${userLocation.latitude},${userLocation.longitude}&destination=${center.latitude},${center.longitude}&travelmode=driving`;
+                    Linking.openURL(url);
+                  } else {
+                    Alert.alert('Location Required', 'Please update your location first.');
+                  }
+                }}
               >
                 <Ionicons name="navigate-circle" size={20} color="#fff" />
                 <Text style={styles.primaryButtonText}>Get Directions</Text>
@@ -525,9 +540,19 @@ const styles = StyleSheet.create({
     backgroundColor: '#e5e5e5',
   },
 
-  webview: {
-    flex: 1,
-    backgroundColor: 'transparent',
+  mapIconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: '#fff',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 4,
   },
 
   mapFallback: {
@@ -536,138 +561,157 @@ const styles = StyleSheet.create({
     backgroundColor: '#f0f9ff',
     justifyContent: 'center',
     alignItems: 'center',
+    padding: 16,
   },
 
   mapFallbackContent: {
     alignItems: 'center',
-    padding: 20,
   },
 
   mapFallbackTitle: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '700',
     color: '#000',
-    marginTop: 12,
+    marginBottom: 4,
     textAlign: 'center',
   },
 
   mapFallbackSubtitle: {
     fontSize: 13,
     color: '#666',
-    marginTop: 6,
+    marginBottom: 12,
     textAlign: 'center',
   },
 
   coordinatesBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: '#fff',
     paddingHorizontal: 12,
     paddingVertical: 8,
-    borderRadius: 8,
-    marginTop: 12,
-    borderWidth: 1,
-    borderColor: '#0284c7',
+    borderRadius: 20,
+    marginTop: 8,
+    gap: 6,
   },
 
   coordinatesText: {
     fontSize: 12,
     color: '#0284c7',
-    fontWeight: '500',
+    fontWeight: '600',
+  },
+
+  tapHintBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 12,
+    gap: 6,
+  },
+
+  tapHint: {
+    fontSize: 12,
+    color: '#666',
+    fontStyle: 'italic',
   },
 
   routeVisualization: {
-    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-around',
-    width: '80%',
-    paddingVertical: 20,
+    width: '100%',
+    paddingVertical: 10,
   },
 
   locationPoint: {
     alignItems: 'center',
+    marginVertical: 8,
   },
 
   userLocationDot: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
     backgroundColor: '#0284c7',
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 3,
+    borderWidth: 4,
     borderColor: '#fff',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 3,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 6,
   },
 
   centerLocationDot: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
     backgroundColor: '#E74C3C',
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 3,
+    borderWidth: 4,
     borderColor: '#fff',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 3,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 6,
   },
 
   locationLabel: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: 13,
+    fontWeight: '700',
     color: '#000',
     marginTop: 8,
   },
 
-  routeLine: {
-    flex: 1,
-    height: 2,
-    marginHorizontal: 10,
-    position: 'relative',
+  coordsSmall: {
+    fontSize: 10,
+    color: '#666',
+    marginTop: 2,
+  },
+
+  routeLineContainer: {
     alignItems: 'center',
     justifyContent: 'center',
+    paddingVertical: 8,
   },
 
-  dottedLine: {
-    width: '100%',
-    height: 2,
+  routeLineVertical: {
+    width: 3,
+    height: 40,
     backgroundColor: '#0284c7',
-    borderStyle: 'dashed',
-    borderWidth: 1,
-    borderColor: '#0284c7',
   },
 
-  distanceBadge: {
-    position: 'absolute',
-    flexDirection: 'row',
+  routeArrow: {
+    marginTop: -8,
+  },
+
+  distanceBadgeLarge: {
     alignItems: 'center',
     backgroundColor: '#fff',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-    borderWidth: 1,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 20,
+    borderWidth: 2,
     borderColor: '#0284c7',
-    gap: 4,
+    marginVertical: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 3,
   },
 
-  distanceBadgeText: {
-    fontSize: 11,
-    fontWeight: '600',
+  distanceBadgeTextLarge: {
+    fontSize: 18,
+    fontWeight: '700',
     color: '#0284c7',
+    marginTop: 4,
   },
 
-  tapToNavigate: {
-    position: 'absolute',
-    bottom: 12,
-    fontSize: 12,
+  distanceSubtext: {
+    fontSize: 11,
     color: '#666',
-    fontStyle: 'italic',
+    marginTop: 2,
   },
 
   placeholderMap: {
