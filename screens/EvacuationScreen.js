@@ -93,7 +93,8 @@ export default function EvacuationScreen({ navigation }) {
     {
       name: 'Baguio Convention Center',
       address: 'Gov. Pack Road, Baguio City',
-      distance: '1.1 km away',
+      latitude: 16.4119,
+      longitude: 120.5960,
       capacity: 450,
       currentCapacity: 100,
       facilities: [
@@ -106,7 +107,8 @@ export default function EvacuationScreen({ navigation }) {
     {
       name: 'UP Baguio Gym',
       address: 'Harrison Rd, Baguio City, Benguet',
-      distance: '1.5 km away',
+      latitude: 16.4052,
+      longitude: 120.5925,
       capacity: 1000,
       currentCapacity: 423,
       facilities: [
@@ -118,8 +120,9 @@ export default function EvacuationScreen({ navigation }) {
     {
       name: 'Burnham Park Pavilion',
       address: 'Burnham Park, Baguio City',
-      distance: '1.7 km away',
-      capacity: 300,
+      latitude: 16.411931903412487,
+      longitude: 120.59351979020661,
+      capacity: 500,
       currentCapacity: 273,
       facilities: [
         { icon: 'medical-outline', name: 'Medical Station' },

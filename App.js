@@ -11,10 +11,16 @@ import EvacuationScreen from './screens/EvacuationScreen';
 import HelpScreen from './screens/HelpScreen';
 import FirstAidScreen from './screens/FirstAidScreen';
 import CommunityHubScreen from './screens/CommunityHubScreen';
+<<<<<<< HEAD
 import EvacDetailScreen from './screens/EvacDetailScreen';
 import SubmitReportScreen from './screens/SubmitReportScreen';
 import InternetOutageReportsScreen from './screens/InternetOutageReportsScreen';
 
+=======
+import EvacuationDetailScreen from './screens/EvacDetailScreen';
+import SubmitReportScreen from './screens/SubmitReportScreen';
+import InternetOutageReportsScreen from './screens/InternetOutageReportsScreen';
+>>>>>>> 1e69396f7b9dc68980dafa7feb892e8939d5468e
 import WelcomeScreen from './screens/WelcomeScreen';
 import LoginScreen from './screens/LoginScreen';
 import SignupScreen from './screens/SignupScreen';
@@ -22,6 +28,7 @@ import SignupScreen from './screens/SignupScreen';
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
+<<<<<<< HEAD
 // Create a Stack Navigator for the Evacuation flow
 function EvacuationStack() {
   return (
@@ -31,6 +38,8 @@ function EvacuationStack() {
   );
 }
 
+=======
+>>>>>>> 1e69396f7b9dc68980dafa7feb892e8939d5468e
 function MainTabs() {
   return (
     <Tab.Navigator
@@ -63,13 +72,25 @@ function MainTabs() {
       <Tab.Screen name="Alerts" component={AlertsScreen} />
       <Tab.Screen name="Home" component={HomeScreen} />
 
-
       <Tab.Screen name="Evacuation" component={EvacuationStack} />
       <Tab.Screen name="Help" component={HelpScreen} />
     </Tab.Navigator>
   );
 }
 
+<<<<<<< HEAD
+=======
+// Create a Stack Navigator for the Evacuation flow
+function EvacuationStack() {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="EvacuationMain" component={EvacuationScreen} />
+      <Stack.Screen name="EvacuationDetail" component={EvacuationDetailScreen} />
+    </Stack.Navigator>
+  );
+}
+
+>>>>>>> 1e69396f7b9dc68980dafa7feb892e8939d5468e
 export default function App() {
   return (
     <NavigationContainer>
