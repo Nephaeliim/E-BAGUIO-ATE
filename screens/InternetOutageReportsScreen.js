@@ -9,8 +9,9 @@ export default function InternetOutageReportsScreen({ navigation, route }) {
   const [showProviderModal, setShowProviderModal] = useState(!selectedProvider);
   const [newComment, setNewComment] = useState('');
   const [comments, setComments] = useState([
-    { id: 1, user: 'Maria Santos', text: 'PLDT talaga!', time: '2 hours ago' },
-    { id: 2, user: 'Juan Dela Cruz', text: 'PLDT ano na naman bayad pero walang wala', time: '3 hours ago' },
+    { id: 1, user: 'Maria Santos', text: 'Ano ba yan talaga!', time: '2 hours ago' },
+    { id: 2, user: 'Juan Dela Cruz', text: 'Wala paring internet!', time: '3 hours ago' },
+    { id: 3, user: 'Fast Lee', text: 'ANO NAAA', time: '3 hours ago' },
   ]);
 
   const providers = [
