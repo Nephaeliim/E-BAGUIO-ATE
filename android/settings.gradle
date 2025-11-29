@@ -15,6 +15,11 @@ pluginManagement {
     "../android/expo-gradle-plugin"
   ).absolutePath
   includeBuild(expoPluginsPath)
+  repositories {
+    gradlePluginPortal()
+    google()
+    mavenCentral()
+  }
 }
 
 plugins {
@@ -31,7 +36,12 @@ extensions.configure(com.facebook.react.ReactSettingsExtension) { ex ->
 }
 expoAutolinking.useExpoModules()
 
-rootProject.name = 'app'
+rootProject.name = 'EBaguioAte'
+
+apply from: new File(["node", "--print", "require.resolve('expo/package.json')"].execute(null, rootDir).text.trim(), "../scripts/autolinking.gradle")
+useExpoModules()
+
+include ':app'
 
 expoAutolinking.useExpoVersionCatalog()
 

@@ -1,6 +1,13 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 
 buildscript {
+  ext {
+    buildToolsVersion = "35.0.0"
+    minSdkVersion = 24
+    compileSdkVersion = 35
+    targetSdkVersion = 35
+    kotlinVersion = "2.0.21"
+  }
   repositories {
     google()
     mavenCentral()
@@ -9,6 +16,7 @@ buildscript {
     classpath('com.android.tools.build:gradle')
     classpath('com.facebook.react:react-native-gradle-plugin')
     classpath('org.jetbrains.kotlin:kotlin-gradle-plugin')
+    classpath("com.android.tools.build:gradle:8.1.1")
   }
 }
 
@@ -16,29 +24,9 @@ allprojects {
   repositories {
     google()
     mavenCentral()
-    maven { url 'https://www.jitpack.io' }
+    maven { url "$rootDir/../node_modules/expo-location/android/maven" }
   }
 }
 
 apply plugin: "expo-root-project"
 apply plugin: "com.facebook.react.rootproject"
-
-android {
-  ...
-  signingConfigs {
-    release {
-      if (project.hasProperty('MYAPP_RELEASE_STORE_FILE')) {
-        storeFile file(MYAPP_RELEASE_STORE_FILE)
-        storePassword MYAPP_RELEASE_STORE_PASSWORD
-        keyAlias MYAPP_RELEASE_KEY_ALIAS
-        keyPassword MYAPP_RELEASE_KEY_PASSWORD
-      }
-    }
-  }
-  buildTypes {
-    release {
-      // ... other release settings
-      signingConfig signingConfigs.release
-    }
-  }
-}
