@@ -26,6 +26,14 @@
       "eas": {
         "projectId": "cbb3d3f3-7e4b-484b-9506-9ee0580f02e6"
       }
-    }
+    },
+    "plugins": [
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow E-BAGUIO-ATE to use your location."
+        }
+      ]
+    ]
   }
 }

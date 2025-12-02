@@ -106,6 +106,10 @@ android {
             keyAlias MYAPP_RELEASE_KEY_ALIAS
             keyPassword MYAPP_RELEASE_KEY_PASSWORD
         }
+        storeFile file("keyfile.keystore")
+        storePassword "ntsppass"
+        keyAlias "ebaguioate"
+        keyPassword "ntsppass"
     }
 }
     buildTypes {
