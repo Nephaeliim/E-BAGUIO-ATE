@@ -6,6 +6,18 @@ import { Ionicons } from '@expo/vector-icons';
 export default function HelpScreen({ navigation }) {
   const [helpCategory, setHelpCategory] = useState('');
   const [description, setDescription] = useState('');
+  const [showDropdown, setShowDropdown] = useState(false);
+
+  const helpCategories = [
+    'Landslide',
+    'Flooding',
+    'Typhoon/Storm',
+    'Earthquake',
+    'Medical Emergency',
+    'Structural Damage',
+    'Evacuation Assistance',
+    'Other'
+  ];
 
   const emergencyContacts = [
     { name: 'Baguio Rescue', number: '(074) 442-8038' },
@@ -47,15 +59,34 @@ export default function HelpScreen({ navigation }) {
           </View>
 
           <Text style={styles.label}>Type of Help Needed</Text>
-          <View style={styles.pickerContainer}>
+          <TouchableOpacity
+            style={styles.pickerContainer}
+            onPress={() => setShowDropdown(!showDropdown)}
+          >
+            <Text style={[styles.pickerText, !helpCategory && styles.placeholderText]}>
+              {helpCategory || 'Select help category'}
+            </Text>
             <Ionicons name="chevron-down-outline" size={20} color="#666" style={styles.pickerIcon} />
-            <TextInput
-              style={styles.input}
-              placeholder="Select help category"
-              value={helpCategory}
-              onChangeText={setHelpCategory}
-            />
-          </View>
+          </TouchableOpacity>
+
+          {showDropdown && (
+            <View style={styles.dropdown}>
+              <ScrollView style={styles.dropdownScroll} nestedScrollEnabled>
+                {helpCategories.map((category, index) => (
+                  <TouchableOpacity
+                    key={index}
+                    style={styles.dropdownItem}
+                    onPress={() => {
+                      setHelpCategory(category);
+                      setShowDropdown(false);
+                    }}
+                  >
+                    <Text style={styles.dropdownItemText}>{category}</Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
+          )}
 
           <Text style={styles.label}>Describe Your Situation</Text>
           <TextInput
@@ -212,16 +243,54 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#333',
     marginBottom: 8,
+    marginTop: 8,
   },
   pickerContainer: {
-    position: 'relative',
-    marginBottom: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    padding: 12,
+    backgroundColor: '#fff',
+    marginBottom: 8,
+  },
+  pickerText: {
+    fontSize: 14,
+    color: '#333',
+    flex: 1,
+  },
+  placeholderText: {
+    color: '#999',
   },
   pickerIcon: {
-    position: 'absolute',
-    right: 12,
-    top: 12,
-    zIndex: 1,
+    marginLeft: 8,
+  },
+  dropdown: {
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    marginBottom: 16,
+    maxHeight: 200,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  dropdownScroll: {
+    maxHeight: 200,
+  },
+  dropdownItem: {
+    padding: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  dropdownItemText: {
+    fontSize: 14,
+    color: '#333',
   },
   input: {
     borderWidth: 1,

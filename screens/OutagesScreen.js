@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import CustomHeader from './CustomHeader';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, Linking } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function OutagesScreen({ navigation }) {
@@ -12,6 +12,12 @@ export default function OutagesScreen({ navigation }) {
     { id: 'globe', name: 'Globe', logo: '🌍', color: '#0033A0' },
     { id: 'converge', name: 'Converge', logo: '📶', color: '#00A651' },
   ];
+
+  // Mock BENECO outage - in production, fetch from BENECO Facebook API
+  const handleBenecoOutageClick = () => {
+    // Open BENECO Facebook page or specific post
+    Linking.openURL('https://www.facebook.com/BENECO1961');
+  };
 
   return (
     <View style={styles.container}>
@@ -31,7 +37,10 @@ export default function OutagesScreen({ navigation }) {
           <Text style={styles.text}>Time Restored: 5/12/2025, 12:06 PM</Text>
         </View>
 
-        <View style={[styles.card, styles.green]}>
+        <TouchableOpacity 
+          style={[styles.card, styles.green]}
+          onPress={handleBenecoOutageClick}
+        >
           <View style={styles.cardHeader}>
             <View style={styles.statusBadge}>
               <Text style={styles.statusBadgeText}>SCHEDULED</Text>
@@ -42,9 +51,16 @@ export default function OutagesScreen({ navigation }) {
           <Text style={styles.text}>Started: 5/12/2025, 10:00 AM</Text>
           <Text style={styles.text}>Est. Duration: 2 hours</Text>
           <Text style={styles.text}>Affected: Lower and Upper Session Road</Text>
-        </View>
+          <View style={styles.tapHint}>
+            <Ionicons name="link-outline" size={14} color="#fff" />
+            <Text style={[styles.text, { fontSize: 12 }]}>Tap for BENECO announcement</Text>
+          </View>
+        </TouchableOpacity>
 
-        <View style={[styles.card, styles.red]}>
+        <TouchableOpacity 
+          style={[styles.card, styles.red]}
+          onPress={handleBenecoOutageClick}
+        >
           <View style={styles.cardHeader}>
             <View style={[styles.statusBadge, { backgroundColor: 'rgba(255, 255, 255, 0.3)' }]}>
               <Text style={styles.statusBadgeText}>ONGOING</Text>
@@ -55,16 +71,20 @@ export default function OutagesScreen({ navigation }) {
           <Text style={styles.text}>Started: 5/12/2025, 7:00 AM</Text>
           <Text style={styles.text}>Est. Restore: Unknown</Text>
           <Text style={styles.text}>Affected: Camp 7, Parts of Bakakeng Sur</Text>
-        </View>
+          <View style={styles.tapHint}>
+            <Ionicons name="link-outline" size={14} color="#fff" />
+            <Text style={[styles.text, { fontSize: 12 }]}>Tap for BENECO announcement</Text>
+          </View>
+        </TouchableOpacity>
 
         {/* Service Provider Status */}
         <View style={styles.statusCard}>
           <Text style={styles.sectionTitle}>Service Provider Status</Text>
           
           <View style={styles.providerItem}>
-            <Text style={styles.providerName}>Electricity Cooperative</Text>
+            <Text style={styles.providerName}>BENECO (Benguet Electric Cooperative)</Text>
             <View style={styles.providerStatus}>
-              <Text style={styles.providerStatusText}>ACTIVE</Text>
+              <Text style={styles.providerStatusText}>OPERATIONAL</Text>
             </View>
           </View>
 
@@ -77,15 +97,15 @@ export default function OutagesScreen({ navigation }) {
 
           <View style={styles.providerItem}>
             <Text style={styles.providerName}>Globe Internet</Text>
-            <View style={[styles.providerStatus, styles.providerStatusWarning]}>
-              <Text style={[styles.providerStatusText, { color: '#856404' }]}>SLOW SERVICE</Text>
+            <View style={[styles.providerStatus, styles.providerStatusCritical]}>
+              <Text style={[styles.providerStatusText, { color: '#721C24' }]}>SERVICE DISRUPTION</Text>
             </View>
           </View>
 
           <View style={styles.providerItem}>
             <Text style={styles.providerName}>Converge Internet</Text>
             <View style={styles.providerStatus}>
-              <Text style={styles.providerStatusText}>ACTIVE</Text>
+              <Text style={styles.providerStatusText}>OPERATIONAL</Text>
             </View>
           </View>
 
@@ -124,87 +144,22 @@ export default function OutagesScreen({ navigation }) {
                   onPress={() => {
                     setSelectedProvider(provider);
                     setShowInternetReports(false);
+                    navigation.navigate('InternetOutageReports', { provider: provider.name });
                   }}
                 >
                   <View style={[styles.providerLogo, { backgroundColor: provider.color }]}>
                     <Text style={styles.providerLogoText}>{provider.logo}</Text>
                   </View>
                   <Text style={styles.providerCardName}>{provider.name}</Text>
-                  <TouchableOpacity style={styles.selectButton}>
+                  <View style={styles.selectButton}>
                     <Text style={styles.selectButtonText}>Select</Text>
-                  </TouchableOpacity>
+                  </View>
                 </TouchableOpacity>
               ))}
             </ScrollView>
           </View>
         </View>
       </Modal>
-
-      {/* Provider Details Modal */}
-      {selectedProvider && (
-        <Modal
-          visible={true}
-          animationType="slide"
-          transparent={true}
-          onRequestClose={() => setSelectedProvider(null)}
-        >
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-              <View style={styles.modalHeader}>
-                <View style={styles.providerModalHeader}>
-                  <View style={[styles.providerLogo, { backgroundColor: selectedProvider.color }]}>
-                    <Text style={styles.providerLogoText}>{selectedProvider.logo}</Text>
-                  </View>
-                  <Text style={styles.modalTitle}>{selectedProvider.name}</Text>
-                </View>
-                <TouchableOpacity onPress={() => setSelectedProvider(null)}>
-                  <Ionicons name="close" size={28} color="#333" />
-                </TouchableOpacity>
-              </View>
-
-              <ScrollView>
-                <View style={styles.providerInfo}>
-                  <Text style={styles.providerInfoText}>
-                    Hi {selectedProvider.name} Customers! These are the scheduled maintenance activities for the week of September 8, 2025. We're performing preventive maintenance to keep your connection strong and reliable. This helps us check and maintain our... <Text style={styles.seeMore}>See More</Text>
-                  </Text>
-                  <TouchableOpacity style={styles.reportOutageButton}>
-                    <Text style={styles.reportOutageButtonText}>Report outage</Text>
-                  </TouchableOpacity>
-                </View>
-
-                <View style={styles.commentsSection}>
-                  <Text style={styles.commentsTitle}>Comments:</Text>
-                  
-                  <View style={styles.commentInputContainer}>
-                    <View style={styles.commentAvatar} />
-                    <View style={styles.commentInput}>
-                      <Text style={styles.commentPlaceholder}>Add a comment...</Text>
-                    </View>
-                  </View>
-
-                  <Comment 
-                    text={`${selectedProvider.name} talaga blaya!`}
-                  />
-                  <Comment 
-                    text={`${selectedProvider.name} ano na naman bayad pero walang wala`}
-                  />
-                </View>
-              </ScrollView>
-            </View>
-          </View>
-        </Modal>
-      )}
-    </View>
-  );
-}
-
-function Comment({ text }) {
-  return (
-    <View style={styles.comment}>
-      <View style={styles.commentAvatar} />
-      <View style={styles.commentBubble}>
-        <Text style={styles.commentText}>{text}</Text>
-      </View>
     </View>
   );
 }
@@ -259,6 +214,12 @@ const styles = StyleSheet.create({
     marginBottom: 4,
     lineHeight: 20,
   },
+  tapHint: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 8,
+    gap: 6,
+  },
   statusCard: {
     backgroundColor: '#fff',
     borderRadius: 12,
@@ -286,6 +247,7 @@ const styles = StyleSheet.create({
   providerName: {
     fontSize: 14,
     color: '#333',
+    flex: 1,
   },
   providerStatus: {
     backgroundColor: '#D4EDDA',
@@ -293,8 +255,8 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 12,
   },
-  providerStatusWarning: {
-    backgroundColor: '#FFF3CD',
+  providerStatusCritical: {
+    backgroundColor: '#F8D7DA',
   },
   providerStatusText: {
     fontSize: 11,
@@ -378,84 +340,5 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 14,
     fontWeight: '600',
-  },
-  providerModalHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    flex: 1,
-  },
-  providerInfo: {
-    backgroundColor: '#E3F2FD',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-  },
-  providerInfoText: {
-    fontSize: 13,
-    color: '#333',
-    lineHeight: 20,
-    marginBottom: 12,
-  },
-  seeMore: {
-    color: '#1E90FF',
-    fontWeight: '600',
-  },
-  reportOutageButton: {
-    backgroundColor: '#4A9B8E',
-    padding: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  reportOutageButtonText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  commentsSection: {
-    marginTop: 8,
-  },
-  commentsTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 12,
-  },
-  commentInputContainer: {
-    flexDirection: 'row',
-    gap: 12,
-    marginBottom: 16,
-  },
-  commentAvatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#E0E0E0',
-  },
-  commentInput: {
-    flex: 1,
-    backgroundColor: '#F5F5F5',
-    borderRadius: 20,
-    padding: 12,
-    justifyContent: 'center',
-  },
-  commentPlaceholder: {
-    color: '#999',
-    fontSize: 14,
-  },
-  comment: {
-    flexDirection: 'row',
-    gap: 12,
-    marginBottom: 12,
-  },
-  commentBubble: {
-    flex: 1,
-    backgroundColor: '#F0F0F0',
-    borderRadius: 12,
-    padding: 12,
-  },
-  commentText: {
-    fontSize: 13,
-    color: '#333',
   },
 });
