@@ -1,5 +1,6 @@
 {
   "expo": {
+
     "name": "E-BAGUIO-ATE",
     "slug": "app",
     "version": "1.0.0",
@@ -17,6 +18,21 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
+
+    "name": "E-Baguio-Ate",
+    "slug": "ebaguioate",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/ebaguioate-logo.jpg",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/ebaguioate-logo.jpg",
+      "resizeMode": "contain",
+      "backgroundColor": "#1E90FF"
+    },
+    "android": {
+      "package": "com.ebaguioate.app",
+
       "permissions": [
         "ACCESS_FINE_LOCATION",
         "ACCESS_COARSE_LOCATION"
@@ -36,4 +52,5 @@
       ]
     ]
   }
+}
 }

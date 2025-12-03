@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Modal, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
+
 const { width } = Dimensions.get('window');
 
 export default function InternetOutageReportsScreen({ navigation, route }) {

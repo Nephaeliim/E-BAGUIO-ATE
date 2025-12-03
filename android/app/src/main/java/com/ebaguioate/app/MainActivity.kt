@@ -1,4 +1,4 @@
-package com.app
+package com.ebaguioate.app
 
 import android.os.Build
 import android.os.Bundle
