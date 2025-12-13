@@ -34,7 +34,7 @@ export default function WelcomeScreen({ navigation }) {
   return (
     <View style={styles.container}>
       <Image
-        source={require('../assets/ebaguioate-logo.jpg')}
+        source={require('../assets/adaptive-icon.png')}
         style={styles.logo}
       />
       

@@ -13,13 +13,24 @@ import Checkbox from 'expo-checkbox';
 import { Ionicons } from "@expo/vector-icons";
 import * as WebBrowser from 'expo-web-browser';
 import * as Google from 'expo-auth-session/providers/google';
-import * as AppleAuthentication from 'expo-apple-authentication';
 
-// Complete the auth session
 WebBrowser.maybeCompleteAuthSession();
 
-// IMPORTANT: Use 10.0.2.2 for Android emulator, not localhost
-const API_URL = 'http://10.0.2.2/ebaguio-api';
+// ============================================
+// TODO: CHANGE THIS TO YOUR NGROK URL!
+// ============================================
+// For emulator testing (localhost):
+// const API_URL = 'http://10.0.2.2/ebaguio-api';
+
+// For real device with ngrok (after running: ngrok http 80):
+const API_URL = 'https://immersed-arrythmic-tonia.ngrok-free.dev/ebaguio-api';
+
+// For production with your public IP:
+// const API_URL = 'http://YOUR.PUBLIC.IP.HERE/ebaguio-api';
+
+// For production with domain:
+// const API_URL = 'https://yourdomain.com/ebaguio-api';
+// ============================================
 
 export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState("");
@@ -27,10 +38,8 @@ export default function LoginScreen({ navigation }) {
   const [loading, setLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
 
-  // Google Sign In configuration
   const [request, response, promptAsync] = Google.useAuthRequest({
-    androidClientId: 'Y667934639842-16kph2p16hsueou1t6lcpv9toqk11v77.apps.googleusercontent.com',
-   // iosClientId: undefined, // optional, remove or leave undefined
+    androidClientId: '667934639842-16kph2p16hsueou1t6lcpv9toqk11v77.apps.googleusercontent.com',
     webClientId: '667934639842-mtam5uiig84e8pjctmi26rqfcbgpugcb.apps.googleusercontent.com',
   });
 
@@ -44,7 +53,6 @@ export default function LoginScreen({ navigation }) {
   const handleGoogleSignIn = async (token) => {
     try {
       setLoading(true);
-      // Fetch user info from Google
       const userInfoResponse = await fetch(
         'https://www.googleapis.com/userinfo/v2/me',
         {
@@ -65,40 +73,6 @@ export default function LoginScreen({ navigation }) {
     }
   };
 
-  const handleAppleSignIn = async () => {
-    try {
-      setLoading(true);
-      const credential = await AppleAuthentication.signInAsync({
-        requestedScopes: [
-          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
-          AppleAuthentication.AppleAuthenticationScope.EMAIL,
-        ],
-      });
-      
-      Alert.alert(
-        'Success',
-        'Welcome!',
-        [{ text: 'OK', onPress: () => navigation.replace("MainTabs") }]
-      );
-    } catch (e) {
-      if (e.code === 'ERR_CANCELED') {
-        // User canceled
-      } else {
-        Alert.alert('Error', 'Apple sign in failed');
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleFacebookSignIn = async () => {
-    Alert.alert(
-      'Facebook Sign In',
-      'Facebook authentication will be available soon. For now, please use Guest Mode or email login.',
-      [{ text: 'OK' }]
-    );
-  };
-
   const handleLogin = async () => {
     if (!email || !password) {
       Alert.alert('Error', 'Please enter email and password');
@@ -108,6 +82,8 @@ export default function LoginScreen({ navigation }) {
     setLoading(true);
 
     try {
+      console.log('Attempting to connect to:', API_URL);
+      
       const response = await fetch(`${API_URL}/login.php`, {
         method: 'POST',
         headers: {
@@ -135,7 +111,7 @@ export default function LoginScreen({ navigation }) {
       console.error('Login error:', error);
       Alert.alert(
         'Connection Error',
-        'Could not connect to server. Would you like to continue as guest?',
+        `Could not connect to server at ${API_URL}\n\nMake sure:\n1. WAMP is running\n2. ngrok is running (ngrok http 80)\n3. You updated the API_URL in the code\n\nWould you like to continue as guest?`,
         [
           { text: 'Cancel', style: 'cancel' },
           { text: 'Guest Mode', onPress: handleGuestMode }
@@ -170,9 +146,14 @@ export default function LoginScreen({ navigation }) {
       </TouchableOpacity>
 
       <Image
-        source={require('../assets/ebaguioate-logo.jpg')}
+        source={require('../assets/adaptive-icon.png')}
         style={styles.logo}
       />
+
+      {/* Show current API URL for debugging */}
+      <Text style={styles.debugText}>
+        API: {API_URL.replace('https://', '').replace('http://', '').split('/')[0]}
+      </Text>
 
       <TextInput
         style={styles.input}
@@ -218,7 +199,6 @@ export default function LoginScreen({ navigation }) {
         )}
       </TouchableOpacity>
 
-      {/* Guest Mode Button */}
       <TouchableOpacity
         style={styles.guestButton}
         onPress={handleGuestMode}
@@ -228,14 +208,12 @@ export default function LoginScreen({ navigation }) {
         <Text style={styles.guestButtonText}>Continue as Guest</Text>
       </TouchableOpacity>
 
-      {/* Social Sign In Divider */}
       <View style={styles.divider}>
         <View style={styles.dividerLine} />
         <Text style={styles.dividerText}>or Sign in with</Text>
         <View style={styles.dividerLine} />
       </View>
 
-      {/* Social Sign In Buttons */}
       <View style={styles.socialContainer}>
         <TouchableOpacity
           style={styles.socialButton}
@@ -245,28 +223,6 @@ export default function LoginScreen({ navigation }) {
           <Image
             style={styles.socialIcon}
             source={{ uri: "https://img.icons8.com/color/48/google-logo.png" }}
-          />
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.socialButton}
-          onPress={handleAppleSignIn}
-          disabled={loading}
-        >
-          <Image
-            style={styles.socialIcon}
-            source={{ uri: "https://img.icons8.com/ios-filled/50/ffffff/mac-os.png" }}
-          />
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.socialButton}
-          onPress={handleFacebookSignIn}
-          disabled={loading}
-        >
-          <Image
-            style={styles.socialIcon}
-            source={{ uri: "https://img.icons8.com/ios-filled/50/ffffff/facebook-new.png" }}
           />
         </TouchableOpacity>
       </View>
@@ -289,11 +245,17 @@ const styles = StyleSheet.create({
   logo: {
     width: 100,
     height: 100,
-    marginBottom: 30,
+    marginBottom: 20,
+  },
+  debugText: {
+    color: "#fff",
+    fontSize: 10,
+    marginBottom: 10,
+    opacity: 0.7,
   },
   input: {
     width: "80%",
-    backgroundColor: "#ffffffff",
+    backgroundColor: "#fff",
     borderRadius: 10,
     padding: 12,
     marginBottom: 15,
@@ -316,7 +278,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#5A7FBD",
   },
   buttonText: {
-    color: "#fdfdfdff",
+    color: "#fff",
     fontWeight: "bold",
   },
   guestButton: {

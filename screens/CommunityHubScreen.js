@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, KeyboardAvoidingView, Platform, Alert, Image, Linking } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import * as Location from 'expo-location';
+import * as ImagePicker from 'expo-image-picker';
 
 export default function CommunityHubScreen({ navigation }) {
   const [message, setMessage] = useState('');
@@ -17,7 +19,8 @@ export default function CommunityHubScreen({ navigation }) {
       user: 'Maria Santos',
       text: 'Session Road is flooded near Burnham Park. Avoid the area!',
       timestamp: '9:15 AM',
-      isEmergency: true
+      isEmergency: true,
+      location: { latitude: 16.4119, longitude: 120.5924, address: 'Session Road, Baguio' }
     },
     {
       id: 3,
@@ -25,33 +28,172 @@ export default function CommunityHubScreen({ navigation }) {
       text: 'Can confirm. Water level rising quickly. Stay safe everyone.',
       timestamp: '9:16 AM',
     },
-    {
-      id: 4,
-      user: 'Emergency Coordinator',
-      text: 'Thank you for the report. Emergency services have been notified. Please evacuate to higher ground if in the area.',
-      timestamp: '9:18 AM',
-      isSystem: true
-    },
   ]);
   const scrollViewRef = useRef();
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [attachedLocation, setAttachedLocation] = useState(null);
+  const [loadingLocation, setLoadingLocation] = useState(false);
 
   const sendMessage = () => {
-    if (message.trim()) {
+    if (message.trim() || selectedImage || attachedLocation) {
       const newMessage = {
         id: messages.length + 1,
         user: 'You',
         text: message,
         timestamp: new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
-        isUser: true
+        isUser: true,
+        image: selectedImage,
+        location: attachedLocation,
       };
       setMessages([...messages, newMessage]);
       setMessage('');
+      setSelectedImage(null);
+      setAttachedLocation(null);
       
-      // Auto scroll to bottom
       setTimeout(() => {
         scrollViewRef.current?.scrollToEnd({ animated: true });
       }, 100);
     }
+  };
+
+  const handleLocationShare = async () => {
+    try {
+      setLoadingLocation(true);
+      
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission Denied', 'Location permission is needed to share your location');
+        setLoadingLocation(false);
+        return;
+      }
+
+      const location = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.High,
+      });
+
+      // Get address
+      const geocode = await Location.reverseGeocodeAsync({
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+      });
+
+      let addressText = 'Current Location';
+      if (geocode && geocode.length > 0) {
+        const place = geocode[0];
+        const parts = [
+          place.street || place.name,
+          place.city || place.district,
+        ].filter(Boolean);
+        addressText = parts.join(', ') || 'Baguio City';
+      }
+
+      setAttachedLocation({
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+        address: addressText,
+      });
+
+      Alert.alert('Success', 'Location attached! Tap send to share.');
+      setLoadingLocation(false);
+    } catch (error) {
+      console.error('Location error:', error);
+      Alert.alert('Error', 'Failed to get location');
+      setLoadingLocation(false);
+    }
+  };
+
+  const handlePhotoAttach = async () => {
+    try {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission Denied', 'Camera roll permission is needed');
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        quality: 0.7,
+      });
+
+      if (!result.canceled) {
+        setSelectedImage(result.assets[0].uri);
+        Alert.alert('Success', 'Photo attached! Tap send to share.');
+      }
+    } catch (error) {
+      console.error('Image picker error:', error);
+      Alert.alert('Error', 'Failed to pick image');
+    }
+  };
+
+  const handleEmergency = () => {
+    Alert.alert(
+      '🚨 EMERGENCY ALERT 🚨',
+      'This will send an URGENT emergency alert to all users and notify emergency services with your location.\n\nAre you sure?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'SEND EMERGENCY ALERT',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const location = await Location.getCurrentPositionAsync({});
+              const geocode = await Location.reverseGeocodeAsync({
+                latitude: location.coords.latitude,
+                longitude: location.coords.longitude,
+              });
+
+              let address = 'Unknown location';
+              if (geocode && geocode.length > 0) {
+                const place = geocode[0];
+                const parts = [place.street, place.city].filter(Boolean);
+                address = parts.join(', ');
+              }
+
+              const emergencyMessage = {
+                id: messages.length + 1,
+                user: 'You',
+                text: '🚨 EMERGENCY! Need immediate assistance!',
+                timestamp: new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
+                isUser: true,
+                isEmergency: true,
+                location: {
+                  latitude: location.coords.latitude,
+                  longitude: location.coords.longitude,
+                  address: address,
+                },
+              };
+
+              setMessages([...messages, emergencyMessage]);
+              
+              // Also call emergency services
+              Alert.alert(
+                'Emergency Alert Sent!',
+                'Your emergency alert has been broadcast to all users. Would you also like to call 911?',
+                [
+                  { text: 'No', style: 'cancel' },
+                  {
+                    text: 'Call 911',
+                    onPress: () => Linking.openURL('tel:911')
+                  }
+                ]
+              );
+
+              setTimeout(() => {
+                scrollViewRef.current?.scrollToEnd({ animated: true });
+              }, 100);
+            } catch (error) {
+              Alert.alert('Error', 'Failed to send emergency alert');
+            }
+          }
+        }
+      ]
+    );
+  };
+
+  const openLocationInMaps = (location) => {
+    const url = `https://www.google.com/maps/search/?api=1&query=${location.latitude},${location.longitude}`;
+    Linking.openURL(url);
   };
 
   return (
@@ -93,23 +235,76 @@ export default function CommunityHubScreen({ navigation }) {
         onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: true })}
       >
         {messages.map((msg) => (
-          <MessageBubble key={msg.id} message={msg} />
+          <MessageBubble 
+            key={msg.id} 
+            message={msg}
+            onLocationPress={openLocationInMaps}
+          />
         ))}
       </ScrollView>
 
+      {/* Attachment Preview */}
+      {(selectedImage || attachedLocation) && (
+        <View style={styles.attachmentPreview}>
+          {selectedImage && (
+            <View style={styles.imagePreview}>
+              <Image source={{ uri: selectedImage }} style={styles.previewImage} />
+              <TouchableOpacity 
+                style={styles.removeButton}
+                onPress={() => setSelectedImage(null)}
+              >
+                <Ionicons name="close-circle" size={24} color="#E74C3C" />
+              </TouchableOpacity>
+            </View>
+          )}
+          {attachedLocation && (
+            <View style={styles.locationPreview}>
+              <Ionicons name="location" size={20} color="#1E90FF" />
+              <Text style={styles.locationPreviewText} numberOfLines={1}>
+                {attachedLocation.address}
+              </Text>
+              <TouchableOpacity 
+                style={styles.removeButton}
+                onPress={() => setAttachedLocation(null)}
+              >
+                <Ionicons name="close-circle" size={20} color="#E74C3C" />
+              </TouchableOpacity>
+            </View>
+          )}
+        </View>
+      )}
+
       {/* Quick Actions Bar */}
       <View style={styles.quickActionsBar}>
-        <TouchableOpacity style={styles.quickAction}>
-          <Ionicons name="location" size={20} color="#1E90FF" />
-          <Text style={styles.quickActionText}>Location</Text>
+        <TouchableOpacity 
+          style={styles.quickAction}
+          onPress={handleLocationShare}
+          disabled={loadingLocation}
+        >
+          <Ionicons 
+            name="location" 
+            size={20} 
+            color={loadingLocation ? "#999" : "#1E90FF"} 
+          />
+          <Text style={styles.quickActionText}>
+            {loadingLocation ? 'Loading...' : 'Location'}
+          </Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.quickAction}>
+        
+        <TouchableOpacity 
+          style={styles.quickAction}
+          onPress={handlePhotoAttach}
+        >
           <Ionicons name="camera" size={20} color="#1E90FF" />
           <Text style={styles.quickActionText}>Photo</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.quickAction}>
+        
+        <TouchableOpacity 
+          style={[styles.quickAction, styles.emergencyAction]}
+          onPress={handleEmergency}
+        >
           <Ionicons name="alert-circle" size={20} color="#E74C3C" />
-          <Text style={styles.quickActionText}>Emergency</Text>
+          <Text style={[styles.quickActionText, styles.emergencyText]}>Emergency</Text>
         </TouchableOpacity>
       </View>
 
@@ -124,9 +319,12 @@ export default function CommunityHubScreen({ navigation }) {
           maxLength={500}
         />
         <TouchableOpacity 
-          style={[styles.sendButton, !message.trim() && styles.sendButtonDisabled]}
+          style={[
+            styles.sendButton, 
+            (!message.trim() && !selectedImage && !attachedLocation) && styles.sendButtonDisabled
+          ]}
           onPress={sendMessage}
-          disabled={!message.trim()}
+          disabled={!message.trim() && !selectedImage && !attachedLocation}
         >
           <Ionicons name="send" size={20} color="#fff" />
         </TouchableOpacity>
@@ -135,7 +333,7 @@ export default function CommunityHubScreen({ navigation }) {
   );
 }
 
-function MessageBubble({ message }) {
+function MessageBubble({ message, onLocationPress }) {
   if (message.isSystem) {
     return (
       <View style={styles.systemMessage}>
@@ -155,7 +353,27 @@ function MessageBubble({ message }) {
     return (
       <View style={styles.userMessageContainer}>
         <View style={styles.userMessage}>
-          <Text style={styles.userMessageText}>{message.text}</Text>
+          {message.image && (
+            <Image source={{ uri: message.image }} style={styles.messageImage} />
+          )}
+          {message.text ? (
+            <Text style={styles.userMessageText}>{message.text}</Text>
+          ) : null}
+          {message.location && (
+            <TouchableOpacity 
+              style={styles.locationCard}
+              onPress={() => onLocationPress(message.location)}
+            >
+              <Ionicons name="location" size={24} color="#E74C3C" />
+              <View style={styles.locationCardContent}>
+                <Text style={styles.locationCardTitle}>Shared Location</Text>
+                <Text style={styles.locationCardAddress} numberOfLines={1}>
+                  {message.location.address}
+                </Text>
+                <Text style={styles.locationCardHint}>Tap to open in maps</Text>
+              </View>
+            </TouchableOpacity>
+          )}
           <Text style={styles.userMessageTime}>{message.timestamp}</Text>
         </View>
       </View>
@@ -176,9 +394,27 @@ function MessageBubble({ message }) {
               <Text style={styles.emergencyTagText}>URGENT</Text>
             </View>
           )}
+          {message.image && (
+            <Image source={{ uri: message.image }} style={styles.messageImage} />
+          )}
           <Text style={[styles.messageText, message.isEmergency && styles.emergencyText]}>
             {message.text}
           </Text>
+          {message.location && (
+            <TouchableOpacity 
+              style={styles.locationCard}
+              onPress={() => onLocationPress(message.location)}
+            >
+              <Ionicons name="location" size={24} color="#E74C3C" />
+              <View style={styles.locationCardContent}>
+                <Text style={styles.locationCardTitle}>Shared Location</Text>
+                <Text style={styles.locationCardAddress} numberOfLines={1}>
+                  {message.location.address}
+                </Text>
+                <Text style={styles.locationCardHint}>Tap to open in maps</Text>
+              </View>
+            </TouchableOpacity>
+          )}
           <Text style={[styles.messageTime, message.isEmergency && styles.emergencyTime]}>
             {message.timestamp}
           </Text>
@@ -388,6 +624,75 @@ const styles = StyleSheet.create({
     marginTop: 4,
     textAlign: 'right',
   },
+  messageImage: {
+    width: '100%',
+    height: 200,
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+  locationCard: {
+    flexDirection: 'row',
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    borderRadius: 8,
+    padding: 10,
+    marginTop: 8,
+    gap: 10,
+    alignItems: 'center',
+  },
+  locationCardContent: {
+    flex: 1,
+  },
+  locationCardTitle: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#E74C3C',
+  },
+  locationCardAddress: {
+    fontSize: 11,
+    color: '#333',
+    marginTop: 2,
+  },
+  locationCardHint: {
+    fontSize: 10,
+    color: '#666',
+    fontStyle: 'italic',
+    marginTop: 2,
+  },
+  attachmentPreview: {
+    backgroundColor: '#fff',
+    borderTopWidth: 1,
+    borderTopColor: '#E0E0E0',
+    padding: 12,
+  },
+  imagePreview: {
+    position: 'relative',
+    marginBottom: 8,
+  },
+  previewImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 8,
+  },
+  removeButton: {
+    position: 'absolute',
+    top: -8,
+    right: -8,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+  },
+  locationPreview: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#E3F2FD',
+    padding: 10,
+    borderRadius: 8,
+    gap: 8,
+  },
+  locationPreviewText: {
+    flex: 1,
+    fontSize: 13,
+    color: '#333',
+  },
   quickActionsBar: {
     flexDirection: 'row',
     backgroundColor: '#fff',
@@ -401,10 +706,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 8,
   },
+  emergencyAction: {
+    backgroundColor: '#FFEBEE',
+    borderRadius: 8,
+    paddingHorizontal: 16,
+  },
   quickActionText: {
     fontSize: 11,
     color: '#666',
     marginTop: 4,
+  },
+  emergencyText: {
+    color: '#E74C3C',
+    fontWeight: 'bold',
   },
   inputContainer: {
     flexDirection: 'row',

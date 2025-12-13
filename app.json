@@ -1,6 +1,5 @@
 {
   "expo": {
-
     "name": "E-BAGUIO-ATE",
     "slug": "app",
     "version": "1.0.0",
@@ -18,39 +17,42 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-
-    "name": "E-Baguio-Ate",
-    "slug": "ebaguioate",
-    "version": "1.0.0",
-    "orientation": "portrait",
-    "icon": "./assets/ebaguioate-logo.jpg",
-    "userInterfaceStyle": "light",
-    "splash": {
-      "image": "./assets/ebaguioate-logo.jpg",
-      "resizeMode": "contain",
-      "backgroundColor": "#1E90FF"
-    },
-    "android": {
-      "package": "com.ebaguioate.app",
-
-      "permissions": [
-        "ACCESS_FINE_LOCATION",
-        "ACCESS_COARSE_LOCATION"
+      "name": "E-Baguio-Ate",
+      "slug": "ebaguioate",
+      "version": "1.0.0",
+      "orientation": "portrait",
+      "icon": "./assets/ebaguioate-logo.jpg",
+      "userInterfaceStyle": "light",
+      "splash": {
+        "image": "./assets/ebaguioate-logo.jpg",
+        "resizeMode": "contain",
+        "backgroundColor": "#1E90FF"
+      },
+      "android": {
+        "package": "com.ebaguioate.app",
+        "permissions": [
+          "ACCESS_FINE_LOCATION",
+          "ACCESS_COARSE_LOCATION"
+        ]
+      },
+      "extra": {
+        "eas": {
+          "projectId": "cbb3d3f3-7e4b-484b-9506-9ee0580f02e6"
+        }
+      },
+      "plugins": [
+        [
+          "expo-location",
+          {
+            "locationAlwaysAndWhenInUsePermission": "Allow E-BAGUIO-ATE to use your location."
+          }
+        ]
       ]
     },
     "extra": {
       "eas": {
-        "projectId": "cbb3d3f3-7e4b-484b-9506-9ee0580f02e6"
+        "projectId": "43d2ac1b-0962-4910-b3a6-b967ef879c0c"
       }
-    },
-    "plugins": [
-      [
-        "expo-location",
-        {
-          "locationAlwaysAndWhenInUsePermission": "Allow E-BAGUIO-ATE to use your location."
-        }
-      ]
-    ]
+    }
   }
-}
 }

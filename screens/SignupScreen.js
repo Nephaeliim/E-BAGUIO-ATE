@@ -11,8 +11,11 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
-// IMPORTANT: Use 10.0.2.2 for Android emulator, not localhost
-const API_URL = 'http://10.0.2.2/ebaguio-api';
+// ============================================
+// TODO: CHANGE THIS TO YOUR NGROK URL!
+// Same as LoginScreen.js
+// ============================================
+const API_URL = 'https://immersed-arrythmic-tonia.ngrok-free.dev/ebaguio-api';
 
 export default function SignupScreen({ navigation }) {
   const [email, setEmail] = useState("");
@@ -40,6 +43,8 @@ export default function SignupScreen({ navigation }) {
     setLoading(true);
 
     try {
+      console.log('Attempting signup at:', API_URL);
+      
       const response = await fetch(`${API_URL}/register.php`, {
         method: 'POST',
         headers: {
@@ -53,25 +58,33 @@ export default function SignupScreen({ navigation }) {
       });
 
       const data = await response.json();
+      console.log('Signup response:', data);
 
       if (data.success) {
-        Alert.alert('Success', 'Account created! Please log in now.', [
-          {
-            text: 'OK',
-            onPress: () => {
-              setEmail('');
-              setPassword('');
-              setConfirm('');
-              navigation.navigate('Login');
+        Alert.alert(
+          'Success', 
+          'Account created successfully! You can now log in.', 
+          [
+            {
+              text: 'OK',
+              onPress: () => {
+                setEmail('');
+                setPassword('');
+                setConfirm('');
+                navigation.navigate('Login');
+              }
             }
-          }
-        ]);
+          ]
+        );
       } else {
         Alert.alert('Registration Failed', data.message || 'Something went wrong');
       }
     } catch (error) {
       console.error('Signup error:', error);
-      Alert.alert('Error', 'Could not connect to server. Make sure WAMP is running.');
+      Alert.alert(
+        'Connection Error',
+        `Could not connect to server.\n\nMake sure:\n1. WAMP is running\n2. ngrok is running (ngrok http 80)\n3. API URL is correct: ${API_URL}`
+      );
     } finally {
       setLoading(false);
     }
@@ -90,6 +103,10 @@ export default function SignupScreen({ navigation }) {
         source={require('../assets/ebaguioate-logo.jpg')}
         style={styles.logo}
       />
+
+      <Text style={styles.debugText}>
+        API: {API_URL.replace('https://', '').replace('http://', '').split('/')[0]}
+      </Text>
 
       <TextInput
         style={styles.input}
@@ -160,7 +177,13 @@ const styles = StyleSheet.create({
   logo: {
     width: 100,
     height: 100,
-    marginBottom: 30,
+    marginBottom: 20,
+  },
+  debugText: {
+    color: "#fff",
+    fontSize: 10,
+    marginBottom: 10,
+    opacity: 0.7,
   },
   input: {
     width: "80%",
